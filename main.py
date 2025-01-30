@@ -11,7 +11,7 @@ from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Load environment variables
 load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key="AIzaSyBtueGYAjRH4TOeyYC1-fJOzhs-U3dJt-Q")
 
 # Initialize session state variables
 if 'audio_file_path' not in st.session_state:
