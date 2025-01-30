@@ -7,10 +7,12 @@ from PIL import Image
 import google.generativeai as genai
 import base64
 import re
+import cv2
+from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Load environment variables
 load_dotenv()
-genai.configure(api_key="AIzaSyBtueGYAjRH4TOeyYC1-fJOzhs-U3dJt-Q")
+genai.configure(api_key='AIzaSyC-OEPHOBSsiwTaEgMMSSqLiDnYgZJHyG8' )
 
 # Initialize session state variables
 if 'audio_file_path' not in st.session_state:
@@ -19,6 +21,8 @@ if 'is_playing' not in st.session_state:
     st.session_state.is_playing = False
 if 'response' not in st.session_state:
     st.session_state.response = ""
+if 'captured_image' not in st.session_state:
+    st.session_state.captured_image = None
 
 # Function to get response from Gemini model
 def get_gemini_response(input_text, image, prompt):
@@ -48,18 +52,40 @@ def text_to_speech(text, lang):
     tts.save(temp_file.name)
     return temp_file.name
 
-# Initialize Streamlit app
+
 st.set_page_config(page_title="Gemini Image Demo")
 
 st.header("Medicine Application")
+st.markdown(
+    """
+    <style>
+    .stCameraInput {
+        width: 500px; /* Adjust the width */
+        height: 350px; /* Adjust the height */
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+# Dropdown for choosing input method
+input_method = st.selectbox("Choose Input Method", ["Upload Image", "Scan Image"])
 
-# Sidebar for file upload and image display
-with st.sidebar:
+uploaded_file = None
+if input_method == "Upload Image":
+    # File uploader for image upload
     uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png", "webp"])
-    image = ""
+    image = None
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
         st.image(image, caption="Uploaded Image.", width=300)
+
+elif input_method == "Scan Image":
+    uploaded_file = st.camera_input("Take a picture")
+
+    if uploaded_file:
+        st.image(uploaded_file)
+    else:
+        st.error("No image captured. Please ensure your webcam is working.")
 
 # Language selection in main content
 language_options = ["English", "Tamil"]
@@ -81,11 +107,21 @@ if submit:
         os.remove(st.session_state.audio_file_path)
         st.session_state.audio_file_path = None
 
-    if uploaded_file:
+    if input_method == "Upload Image" and uploaded_file:
         # Setup image data
         image_data = input_image_setup(uploaded_file)
         response = get_gemini_response(input_prompt, image_data, '')
 
+    elif input_method == "Scan Image" and uploaded_file:
+        # Convert captured image to bytes for processing
+        image_data = input_image_setup(uploaded_file)
+        response = get_gemini_response(input_prompt, image_data, '')
+
+    else:
+        st.error("No image provided. Please upload or scan an image.")
+        response = None
+
+    if response:
         # Clean response for English by removing special characters
         if selected_language == 'English':
             response = re.sub(r'[^a-zA-Z0-9.\s]', '', response)
@@ -94,6 +130,7 @@ if submit:
         st.subheader("The Response is")
         st.write(response)
         print(response)
+
         # Generate audio file for response
         audio_file_path = text_to_speech(response, selected_language)
         st.session_state.audio_file_path = audio_file_path
