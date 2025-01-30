@@ -7,12 +7,11 @@ from PIL import Image
 import google.generativeai as genai
 import base64
 import re
-
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Load environment variables
 load_dotenv()
-genai.configure(api_key='AIzaSyC-OEPHOBSsiwTaEgMMSSqLiDnYgZJHyG8' )
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 # Initialize session state variables
 if 'audio_file_path' not in st.session_state:
@@ -56,17 +55,7 @@ def text_to_speech(text, lang):
 st.set_page_config(page_title="Gemini Image Demo")
 
 st.header("Medicine Application")
-st.markdown(
-    """
-    <style>
-    .stCameraInput {
-        width: 500px; /* Adjust the width */
-        height: 350px; /* Adjust the height */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+
 # Dropdown for choosing input method
 input_method = st.selectbox("Choose Input Method", ["Upload Image", "Scan Image"])
 
@@ -80,6 +69,17 @@ if input_method == "Upload Image":
         st.image(image, caption="Uploaded Image.", width=300)
 
 elif input_method == "Scan Image":
+#     st.markdown(
+#     """
+#     <style>
+#     .stCameraInput {
+#         width: 500px; /* Adjust the width */
+#         height: 350px; /* Adjust the height */
+#     }
+#     </style>
+#     """,
+#     unsafe_allow_html=True,
+# )
     uploaded_file = st.camera_input("Take a picture")
 
     if uploaded_file:
@@ -159,4 +159,4 @@ if st.session_state.audio_file_path:
                 os.remove(st.session_state.audio_file_path)
             st.session_state.audio_file_path = None
             st.session_state.is_playing = False
-            st.write("Playback stopped.")
+            st.write("Playback stopped.")
