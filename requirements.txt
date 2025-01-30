@@ -6,3 +6,4 @@ PyPDF2
 chromadb
 faiss-cpu
 gtts
+streamlit_webrtc
