@@ -7,7 +7,7 @@ from PIL import Image
 import google.generativeai as genai
 import base64
 import re
-import cv2
+
 from streamlit_webrtc import webrtc_streamer, VideoTransformerBase
 
 # Load environment variables
